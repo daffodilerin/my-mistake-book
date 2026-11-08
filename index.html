@@ -134,8 +134,18 @@
         const statusMsg = document.getElementById('statusMsg');
         const mistakeList = document.getElementById('mistakeList');
 
-        // 切換老師/學生模式
+       // 切換老師/學生模式 (加入密碼保護)
         toggleAdminBtn.addEventListener('click', () => {
+            // 如果準備從學生切換成老師，先要求輸入密碼
+            if (!isAdminMode) {
+                const password = prompt("請輸入老師專屬通關密碼：");
+                // 💡 您可以把雙引號裡面的 0501 改成您想要的密碼！
+                if (password !== "0501") { 
+                    alert("❌ 密碼錯誤，無法進入老師後台！");
+                    return; // 密碼錯誤就直接中斷，不切換畫面
+                }
+            }
+
             isAdminMode = !isAdminMode;
             if(isAdminMode) {
                 studentArea.style.display = 'none';
