@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>會考錯題本神器</title>
     <style>
-        /* 保持原有的 CSS 樣式設定 */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #2c3e50; }
@@ -37,7 +36,6 @@
                 <input type="text" id="studentName" placeholder="例如：王小明 01" required>
             </div>
             
-            <!-- 支援點擊上傳與 Ctrl+V 貼上 -->
             <div class="upload-area" id="uploadArea">
                 <p>📸 點擊選擇圖片，或直接在此處 <b>Ctrl+V</b> 貼上截圖</p>
                 <input type="file" id="imageInput" accept="image/*" style="display: none;">
@@ -92,17 +90,13 @@
             <button id="downloadWordBtn" style="background-color: #27ae60; margin-bottom: 20px;">📥 匯出全班 Word 檔 (依學生分頁)</button>
         </div>
 
-        <div class="mistake-list" id="mistakeList">
-            <!-- 錯題卡片會生成在這裡 -->
-        </div>
+        <div class="mistake-list" id="mistakeList"></div>
     </div>
 
-    <!-- 載入 Firebase (使用 ES Module 方式) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // ✅ 您的 Firebase 金鑰
         const firebaseConfig = {
             apiKey: "AIzaSyAreJJr6qhaCfsrTv40Msv1ARqZ-7XMrvk",
             authDomain: "mistake-book-1aecb.firebaseapp.com",
@@ -113,17 +107,15 @@
             measurementId: "G-CEX0M6D28F"
         };
 
-        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // ✅ 您的最新 Gemini API Key
+        // 您測試成功的 Gemini API Key
         const GEMINI_API_KEY = "AQ.Ab8RN6JLy-rEgUlfxStc5oEkZEWhWnpQydRCcnA3LKapnro7_w";
 
         let isAdminMode = false;
         let base64Image = "";
 
-        // UI 元素綁定
         const toggleAdminBtn = document.getElementById('toggleAdminBtn');
         const studentArea = document.getElementById('studentArea');
         const adminArea = document.getElementById('adminArea');
@@ -134,7 +126,6 @@
         const statusMsg = document.getElementById('statusMsg');
         const mistakeList = document.getElementById('mistakeList');
 
-        // 切換老師/學生模式
         toggleAdminBtn.addEventListener('click', () => {
             if (!isAdminMode) {
                 const password = prompt("請輸入老師專屬通關密碼：");
@@ -158,7 +149,6 @@
             loadMistakesFromCloud(); 
         });
 
-        // 處理圖片上傳與貼上
         uploadArea.addEventListener('click', () => imageInput.click());
         
         document.addEventListener('paste', (e) => {
@@ -190,7 +180,6 @@
             reader.readAsDataURL(file);
         }
 
-        // 呼叫 Gemini AI
         analyzeBtn.addEventListener('click', async () => {
             const studentName = document.getElementById('studentName').value;
             const errorReason = document.getElementById('errorReason').value;
@@ -204,10 +193,13 @@
             analyzeBtn.disabled = true;
 
             try {
-                // ✅ 使用正確的反引號與最新版的 gemini-2.5-flash 模型
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                // ✅ 關鍵修改：將網址上的 ?key= 移除，改用 x-goog-api-key 標頭傳送，避免符號被亂碼化！
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-goog-api-key': GEMINI_API_KEY.trim()
+                    },
                     body: JSON.stringify({
                         contents: [{
                             parts: [
@@ -220,7 +212,6 @@
 
                 const data = await response.json();
 
-                // ✅ 錯誤攔截器
                 if (data.error) {
                     alert("⚠️ Google 伺服器拒絕連線！\n\n錯誤代碼：" + data.error.code + "\n拒絕原因：" + data.error.message);
                     statusMsg.textContent = "❌ 解析失敗，請查看彈出視窗。";
@@ -229,7 +220,6 @@
                 }
 
                 let aiResultText = data.candidates[0].content.parts[0].text;
-                
                 aiResultText = aiResultText.replace(/```json/g, "").replace(/```/g, "").trim();
                 const aiResult = JSON.parse(aiResultText);
 
@@ -249,10 +239,8 @@
                 await addDoc(collection(db, "mistakes"), mistakeData);
                 
                 statusMsg.textContent = "✅ 已成功存入雲端錯題本！";
-                
                 base64Image = "";
                 previewImage.style.display = 'none';
-                
                 loadMistakesFromCloud();
 
             } catch (error) {
@@ -263,7 +251,6 @@
             }
         });
 
-        // 從 Firebase 讀取資料
         async function loadMistakesFromCloud() {
             mistakeList.innerHTML = '<p style="text-align:center;">載入中...</p>';
             const q = query(collection(db, "mistakes"), orderBy("timestamp", "desc"));
@@ -279,7 +266,6 @@
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data();
                 const docId = docSnap.id;
-
                 const currentStudent = document.getElementById('studentName').value;
                 if (!isAdminMode && currentStudent && data.studentName !== currentStudent) {
                     return; 
@@ -319,7 +305,6 @@
                 });
             });
         }
-
         loadMistakesFromCloud();
     </script>
 </body>
