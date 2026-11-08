@@ -118,7 +118,7 @@
         const db = getFirestore(app);
 
         // ⚠️ 請在這裡填入您的 Gemini API Key！
-        const GEMINI_API_KEY = "AQ.Ab8RN6IRyg9uIHHAfswaDHwSOux4RcwfhgJtszaFYz5aQslEJQ"; 
+        const GEMINI_API_KEY = "AQ.Ab8RN6JLy-rEgUlfxStc5oEkZEWhWnpQydRCcnA3LKapnro7_w";
 
         let isAdminMode = false;
         let base64Image = "";
@@ -202,7 +202,7 @@
 
             if (!studentName) return alert('請務必填寫姓名/座號！');
             if (!base64Image) return alert('請先貼上或上傳圖片！');
-            if (GEMINI_API_KEY === "AQ.Ab8RN6II6HiRFPBd2yhWP4QNx3uDEMamBH_58dJZi2GRJ3GqEw") return alert('老師，您還沒填入 Gemini API Key 喔！');
+           if (GEMINI_API_KEY === "請將這段文字替換成您的_GEMINI_API_KEY") return alert('老師，您還沒填入 Gemini API Key 喔！');
 
             statusMsg.textContent = "⏳ AI 正在幫您精準抓出盲點，請稍候...";
             analyzeBtn.disabled = true;
